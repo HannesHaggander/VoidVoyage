@@ -2,9 +2,9 @@
 
 namespace Resources.Weapons
 {
-    public interface IProjectile
+    public interface IProjectile<T>
     {
-        IProjectile SetDamage(int damage);
-        IProjectile SetSource(Transform source);
+        IProjectile<T> SetDamage(int damage);
+        IProjectile<T> SetSource(Transform source);
     }
 }

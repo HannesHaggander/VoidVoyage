@@ -29,7 +29,7 @@ namespace Resources.Weapons.Laser
             if(_lastFire.AddSeconds(GetFireRate()) > DateTime.Now) { return; }
             _lastFire = DateTime.Now;
             Instantiate(Projectile, transform.position, transform.rotation)
-                .GetComponent<IProjectile>()
+                .GetComponent<LaserProjectile>()
                 .SetDamage(5)
                 .SetSource(transform);
         }
