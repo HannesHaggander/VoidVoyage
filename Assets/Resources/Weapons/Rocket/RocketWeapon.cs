@@ -25,7 +25,7 @@ namespace Resources.Weapons.Rocket
                 .GetComponent<RocketProjectile>()
                 .SetTarget(target.transform)
                 .SetDamage(3)
-                .SetSource(transform);
+                .SetSource(transform.parent);
         }
 
         public GameObject GetClosestTarget()

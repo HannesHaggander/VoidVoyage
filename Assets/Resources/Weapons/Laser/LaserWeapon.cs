@@ -31,7 +31,7 @@ namespace Resources.Weapons.Laser
             Instantiate(Projectile, transform.position, transform.rotation)
                 .GetComponent<LaserProjectile>()
                 .SetDamage(5)
-                .SetSource(transform);
+                .SetSource(transform.parent);
         }
 
         public int GetBaseDamage()
