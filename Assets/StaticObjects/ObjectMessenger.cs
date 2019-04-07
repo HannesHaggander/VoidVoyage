@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Assets.StaticObjects;
 using UnityEngine;
 
-namespace Assets.StaticObjects
+namespace StaticObjects
 {
     public class ObjectMessenger : MonoBehaviour
     {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Resources.Weapons
@@ -18,5 +17,6 @@ namespace Resources.Weapons
         void ResetDamage();
         void ResetFireRate();
         string GetPrefabPath();
+        GameObject GetGameObject();
     }
 }

@@ -1,30 +1,46 @@
-﻿using Resources.Weapons;
-using System;
+﻿using Assets.StaticObjects;
 using JetBrains.Annotations;
+using Messages;
+using Resources.Weapons;
 using StaticObjects;
-using UnityEditor;
+using System;
 using UnityEngine;
 
 
 namespace Resources.Ships.Player
 {
     [Serializable]
-    public class PlayerEntity : MonoBehaviour, IEntity
+    public class PlayerEntity : MonoBehaviour, IEntity, IObjectReceiver
     {
         public float MovementSpeed = 1;
+        public int Health = 100, MaxHealth = 100;
+        public IWeapon CurrentWeapon
+        {
+            get => _currentWeaponCache;
+            set
+            {
+                _currentWeaponCache = value;
+                WeaponPrefabPath = value?.GetPrefabPath() ?? "";
+            }
+        }
+
         private string _inputHorizontal = "Horizontal", _inputVertical = "Vertical";
         private float _inputX, _inputY;
         private Vector2 _inputVector;
-        public IWeapon CurrentWeapon;
-        public int Health = 100;
-        public int MaxHealth = 100;
-        [SerializeField]
-        private string WeaponPrefabPath = "";
+        private IWeapon _currentWeaponCache;
+        [SerializeField] private string WeaponPrefabPath = "";
+        private Guid? _subIdWeaponMessage;
+
+        public Transform WeaponSlot;
         
         protected void Awake()
         {
             ItemCache.Instance.SetPlayerEntity(this);
-            ChangeWeapon(GetComponentInChildren<IWeapon>());
+        }
+
+        protected void Start()
+        {
+            _subIdWeaponMessage = ObjectMessenger.Instance.Subscribe(typeof(WeaponMessage), this);
         }
 
         protected void Update()
@@ -42,6 +58,14 @@ namespace Resources.Ships.Player
             }
         }
 
+        protected void OnDestroy()
+        {
+            if (_subIdWeaponMessage.HasValue)
+            {
+                ObjectMessenger.Instance.Unsubscribe(_subIdWeaponMessage.Value);
+            }
+        }
+
         public void Move(Vector2 vector)
         {
             var moveVector =  vector.normalized * MovementSpeed * Time.deltaTime;
@@ -50,8 +74,12 @@ namespace Resources.Ships.Player
 
         public void ChangeWeapon([NotNull] IWeapon weapon)
         {
+            if(CurrentWeapon != null)
+            {
+                Destroy(CurrentWeapon.GetGameObject());
+            }
+
             CurrentWeapon = weapon ?? throw new ArgumentNullException(nameof(weapon));
-            WeaponPrefabPath = CurrentWeapon.GetPrefabPath();
         }
 
         public void TakeDamage(int amount)
@@ -78,6 +106,18 @@ namespace Resources.Ships.Player
         public Transform GetTransform()
         {
             return transform;
+        }
+
+        public GameObject GetGameObject() => gameObject;
+
+        public void ReceiveObject(object message)
+        {
+            if(message is WeaponMessage weaponMsg)
+            {
+               ChangeWeapon(Instantiate(UnityEngine.Resources.Load<GameObject>(
+                           weaponMsg.weapon.GetPrefabPath()), WeaponSlot.position, transform.rotation, transform)
+                   .GetComponent<IWeapon>());
+            }
         }
     }
 }

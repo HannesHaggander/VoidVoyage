@@ -1,9 +1,8 @@
-﻿using StaticObjects;
+﻿using CodeExtensions;
+using StaticObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CodeExtensions;
-using UnityEditor;
 using UnityEngine;
 
 namespace Resources.Weapons.Laser
@@ -93,5 +92,7 @@ namespace Resources.Weapons.Laser
         {
             return "Weapons/Laser/laser_weapon_prefab";
         }
+
+        public GameObject GetGameObject() => gameObject;
     }
 }
