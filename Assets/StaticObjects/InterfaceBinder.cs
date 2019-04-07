@@ -1,5 +1,6 @@
 ﻿using Messages;
 using Resources.Weapons.Laser;
+using Resources.Weapons.Rocket;
 using UnityEngine;
 
 namespace StaticObjects
@@ -16,7 +17,10 @@ namespace StaticObjects
 
         public void ChangeWeaponRocket()
         {
-
+            ObjectMessenger.Instance.Publish(new WeaponMessage
+            {
+                weapon = new RocketWeapon()
+            });
         }
     }
 }
