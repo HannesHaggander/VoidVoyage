@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Resources.Weapons
 {
@@ -10,13 +9,8 @@ namespace Resources.Weapons
         float GetBaseFireRate();
         int GetDamage();
         float GetFireRate();
-        Guid SetFireRateIncrease(float fireRate);
-        Guid SetDamageIncrease(int damage);
-        void RemoveFireRateIncrease(Guid id);
-        void RemoveDamageIncrease(Guid id);
-        void ResetDamage();
-        void ResetFireRate();
         string GetPrefabPath();
         GameObject GetGameObject();
+        void SetStatsObject(Transform statsObject);
     }
 }

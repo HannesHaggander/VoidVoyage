@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Resources.Weapons.Rocket
@@ -11,8 +9,8 @@ namespace Resources.Weapons.Rocket
         public int BaseDamage = 1;
         public float BaseFireRate = 1;
         public GameObject Projectile;
-
         private DateTime _lastFire;
+        private Transform _statsObject;
 
         public void Fire()
         {
@@ -26,21 +24,6 @@ namespace Resources.Weapons.Rocket
                 .SetTarget(target.transform)
                 .SetDamage(3)
                 .SetSource(transform.parent);
-        }
-
-        public GameObject GetClosestTarget()
-        {
-            KeyValuePair<GameObject, float>? mvp = null;
-            foreach(var g in GameObject.FindGameObjectsWithTag("Enemy"))
-            {
-                var distance = Vector3.Distance(transform.position, g.transform.position);
-                if (!mvp.HasValue || distance < mvp.Value.Value)
-                {
-                    mvp = new KeyValuePair<GameObject, float>(g, distance);
-                }
-            }
-
-            return mvp?.Key;
         }
 
         public int GetBaseDamage()
@@ -63,38 +46,27 @@ namespace Resources.Weapons.Rocket
             return GetBaseFireRate();
         }
 
-        public Guid SetFireRateIncrease(float fireRate)
+        public GameObject GetClosestTarget()
         {
-            throw new NotImplementedException();
-        }
+            KeyValuePair<GameObject, float>? mvp = null;
+            foreach(var g in GameObject.FindGameObjectsWithTag("Enemy"))
+            {
+                var distance = Vector3.Distance(transform.position, g.transform.position);
+                if (!mvp.HasValue || distance < mvp.Value.Value)
+                {
+                    mvp = new KeyValuePair<GameObject, float>(g, distance);
+                }
+            }
 
-        public Guid SetDamageIncrease(int damage)
-        {
-            throw new NotImplementedException();
+            return mvp?.Key;
         }
-
-        public void RemoveFireRateIncrease(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void RemoveDamageIncrease(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ResetDamage()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ResetFireRate()
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public string GetPrefabPath() => "Weapons/Rocket/rocket_weapon_prefab";
 
         public GameObject GetGameObject() => gameObject;
+        public void SetStatsObject(Transform statsObject)
+        {
+            _statsObject = statsObject;
+        }
     }
 }

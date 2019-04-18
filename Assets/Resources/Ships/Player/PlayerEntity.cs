@@ -1,6 +1,7 @@
 ﻿using Assets.StaticObjects;
 using JetBrains.Annotations;
 using Messages;
+using Resources.Items;
 using Resources.Weapons;
 using StaticObjects;
 using System;
@@ -10,10 +11,12 @@ using UnityEngine;
 namespace Resources.Ships.Player
 {
     [Serializable]
+    [RequireComponent(typeof(PlayerShipStats))]
     public class PlayerEntity : MonoBehaviour, IEntity, IObjectReceiver
     {
         public float MovementSpeed = 1;
         public int Health = 100, MaxHealth = 100;
+
         public IWeapon CurrentWeapon
         {
             get => _currentWeaponCache;
@@ -23,24 +26,42 @@ namespace Resources.Ships.Player
                 WeaponPrefabPath = value?.GetPrefabPath() ?? "";
             }
         }
+        public IItem CurrentItem
+        {
+            get => _currentItemCache;
+            set
+            {
+                _currentItemCache = value;
+                ItemPrefabPath = value?.GetPrefabPath();
+            }
+        }
+
+        public PlayerShipStats Stats
+        {
+            get;
+            private set;
+        }
 
         private string _inputHorizontal = "Horizontal", _inputVertical = "Vertical";
         private float _inputX, _inputY;
         private Vector2 _inputVector;
         private IWeapon _currentWeaponCache;
-        [SerializeField] private string WeaponPrefabPath = "";
-        private Guid? _subIdWeaponMessage;
+        private IItem _currentItemCache;
+        [SerializeField] private string WeaponPrefabPath = "", ItemPrefabPath = "";
+        private Guid? _subIdWeaponMessage, _subIdItemMessage;
 
-        public Transform WeaponSlot;
+        public Transform WeaponSlot, ItemSlot;
         
         protected void Awake()
         {
             ItemCache.Instance.SetPlayerEntity(this);
+            Stats = GetComponent<PlayerShipStats>();
         }
 
         protected void Start()
         {
             _subIdWeaponMessage = ObjectMessenger.Instance.Subscribe(typeof(WeaponMessage), this);
+            _subIdItemMessage = ObjectMessenger.Instance.Subscribe(typeof(ItemMessage), this);
         }
 
         protected void Update()
@@ -82,6 +103,16 @@ namespace Resources.Ships.Player
             CurrentWeapon = weapon ?? throw new ArgumentNullException(nameof(weapon));
         }
 
+        public void ChangeItem([NotNull] IItem item)
+        {
+            if(CurrentItem != null)
+            {
+                Destroy(CurrentItem.GetGameObject());
+            }
+
+            CurrentItem = item ?? throw new ArgumentNullException(nameof(item));
+        }
+
         public void TakeDamage(int amount)
         {
             if(amount < 0) { return; }
@@ -100,12 +131,17 @@ namespace Resources.Ships.Player
         {
             if(amount < 0) { return; }
 
-            Health = Mathf.Clamp(Health + amount, Health, MaxHealth);
+            Health = Mathf.Clamp(Health + amount, Health, MaxHealth + Stats.GetMaxHealthBonus());
         }
 
         public Transform GetTransform()
         {
             return transform;
+        }
+
+        public IShipStats GetStats()
+        {
+            return Stats;
         }
 
         public GameObject GetGameObject() => gameObject;
@@ -114,9 +150,22 @@ namespace Resources.Ships.Player
         {
             if(message is WeaponMessage weaponMsg)
             {
-               ChangeWeapon(Instantiate(UnityEngine.Resources.Load<GameObject>(
-                           weaponMsg.weapon.GetPrefabPath()), WeaponSlot.position, transform.rotation, transform)
-                   .GetComponent<IWeapon>());
+                var weapon = Instantiate(UnityEngine.Resources.Load<GameObject>(
+                            weaponMsg.weapon.GetPrefabPath()), WeaponSlot.position, transform.rotation, transform)
+                    .GetComponent<IWeapon>();
+
+               ChangeWeapon(weapon);
+               weapon.SetStatsObject(transform);
+            }
+
+            if(message is ItemMessage itemMsg)
+            {
+                var item = Instantiate(UnityEngine.Resources.Load<GameObject>(
+                        itemMsg.Item.GetPrefabPath()), ItemSlot.position, transform.rotation, transform)
+                    .GetComponent<IItem>();
+
+                ChangeItem(item);
+                item.SetStatsObject(transform);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Messages;
+using Resources.Items;
 using Resources.Weapons.Laser;
 using Resources.Weapons.Rocket;
 using UnityEngine;
@@ -20,6 +21,14 @@ namespace StaticObjects
             ObjectMessenger.Instance.Publish(new WeaponMessage
             {
                 weapon = new RocketWeapon()
+            });
+        }
+
+        public void ChangeItemOverCharge()
+        {
+            ObjectMessenger.Instance.Publish(new ItemMessage
+            {
+                Item =  new OverchargeItem()
             });
         }
     }

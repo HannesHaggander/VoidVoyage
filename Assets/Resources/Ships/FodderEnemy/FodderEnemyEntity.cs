@@ -1,4 +1,5 @@
-﻿using Resources.Weapons;
+﻿using System;
+using Resources.Weapons;
 using UnityEngine;
 
 namespace Resources.Ships.FodderEnemy
@@ -29,6 +30,7 @@ namespace Resources.Ships.FodderEnemy
 
         public void TakeDamage(int amount)
         {
+            print($"[{name}:{DateTime.Now:T}] Hit for {amount}");
             Health -= amount;
             if(Health <= 0)
             {
@@ -49,6 +51,11 @@ namespace Resources.Ships.FodderEnemy
         public Transform GetTransform()
         {
             return transform;
+        }
+
+        public IShipStats GetStats()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

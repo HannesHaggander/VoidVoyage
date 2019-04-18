@@ -1,8 +1,7 @@
 ﻿using CodeExtensions;
+using Resources.Ships;
 using StaticObjects;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Resources.Weapons.Laser
@@ -12,9 +11,8 @@ namespace Resources.Weapons.Laser
         public float BaseFireRate = 0.5f;
         public int BaseDamage = 1;
         public GameObject Projectile;
+        public Transform StatsObject { get; private set; }
 
-        private readonly Dictionary<Guid, float> _fireRateIncrease = new Dictionary<Guid, float>();
-        private readonly Dictionary<Guid, int> _damageIncrease = new Dictionary<Guid, int>();
         private Camera _mainCamera;
         private DateTime _lastFire;
 
@@ -46,46 +44,12 @@ namespace Resources.Weapons.Laser
 
         public int GetDamage()
         {
-            return Mathf.Clamp(BaseDamage + _damageIncrease.Sum(pair => pair.Value), 0, int.MaxValue);
+            return Mathf.Clamp(BaseDamage + GetStats().GetDamageMultiplier(), 0, int.MaxValue);
         }
 
         public float GetFireRate()
         {
-            return Mathf.Clamp(BaseFireRate + _fireRateIncrease.Sum(pair => pair.Value), 0.1f, float.PositiveInfinity);
-        }
-
-        public Guid SetFireRateIncrease(float fireRate)
-        {
-            var guid = Guid.NewGuid();
-            _fireRateIncrease.Add(guid, -fireRate);
-            return guid;
-        }
-
-        public Guid SetDamageIncrease(int damage)
-        {
-            var guid = Guid.NewGuid();
-            _damageIncrease.Add(guid, damage);
-            return guid;
-        }
-
-        public void RemoveFireRateIncrease(Guid id)
-        {
-            _fireRateIncrease.Remove(id);
-        }
-
-        public void RemoveDamageIncrease(Guid id)
-        {
-            _damageIncrease.Remove(id);
-        }
-
-        public void ResetDamage()
-        {
-            _damageIncrease.Clear();
-        }
-
-        public void ResetFireRate()
-        {
-            _fireRateIncrease.Clear();
+            return Mathf.Clamp(BaseFireRate + GetStats().GetFireRateMultiplier(), 0.1f, float.PositiveInfinity);
         }
 
         public string GetPrefabPath()
@@ -94,5 +58,13 @@ namespace Resources.Weapons.Laser
         }
 
         public GameObject GetGameObject() => gameObject;
+
+        public void SetStatsObject(Transform statsObject)
+        {
+            StatsObject = statsObject;
+        }
+
+        private IShipStats GetStats() => StatsObject.GetComponent<IShipStats>();
+        
     }
 }
