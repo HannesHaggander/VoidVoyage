@@ -1,10 +1,12 @@
 ﻿using Assets.StaticObjects;
 using JetBrains.Annotations;
 using Messages;
+using Persistence;
 using Resources.Items;
 using Resources.Weapons;
 using StaticObjects;
 using System;
+using System.Linq;
 using UnityEngine;
 
 
@@ -12,18 +14,18 @@ namespace Resources.Ships.Player
 {
     [Serializable]
     [RequireComponent(typeof(PlayerShipStats))]
-    public class PlayerEntity : MonoBehaviour, IEntity, IObjectReceiver
+    public class PlayerEntity : MonoBehaviour, IEntity, IObjectReceiver, IPersistable
     {
-        public float MovementSpeed = 1;
+        [NonSerialized]
+        public float MovementSpeed = 5;
         public int Health = 100, MaxHealth = 100;
-
         public IWeapon CurrentWeapon
         {
             get => _currentWeaponCache;
             set
             {
                 _currentWeaponCache = value;
-                WeaponPrefabPath = value?.GetPrefabPath() ?? "";
+                _weaponPrefabPath = value?.GetPrefabPath() ?? "";
             }
         }
         public IItem CurrentItem
@@ -32,10 +34,9 @@ namespace Resources.Ships.Player
             set
             {
                 _currentItemCache = value;
-                ItemPrefabPath = value?.GetPrefabPath();
+                _itemPrefabPath = value?.GetPrefabPath();
             }
         }
-
         public PlayerShipStats Stats
         {
             get;
@@ -47,14 +48,17 @@ namespace Resources.Ships.Player
         private Vector2 _inputVector;
         private IWeapon _currentWeaponCache;
         private IItem _currentItemCache;
-        [SerializeField] private string WeaponPrefabPath = "", ItemPrefabPath = "";
-        private Guid? _subIdWeaponMessage, _subIdItemMessage;
-
-        public Transform WeaponSlot, ItemSlot;
+        [SerializeField][HideInInspector]
+        private string _weaponPrefabPath = "", _itemPrefabPath = "";
+        private Guid? _subIdWeaponMessage, _subIdItemMessage, _subIdSavePersistables, _subIdLoadPersistables;
+        [NonSerialized]
+        public Transform WeaponSlots, ItemSlots;
         
         protected void Awake()
         {
             ItemCache.Instance.SetPlayerEntity(this);
+            WeaponSlots = GetComponentsInChildren<Transform>().FirstOrDefault(x => x.tag.Equals("WeaponSlot"));
+            ItemSlots = GetComponentsInChildren<Transform>().FirstOrDefault(x => x.tag.Equals("ItemSlot"));
             Stats = GetComponent<PlayerShipStats>();
         }
 
@@ -62,6 +66,10 @@ namespace Resources.Ships.Player
         {
             _subIdWeaponMessage = ObjectMessenger.Instance.Subscribe(typeof(WeaponMessage), this);
             _subIdItemMessage = ObjectMessenger.Instance.Subscribe(typeof(ItemMessage), this);
+            _subIdSavePersistables = ObjectMessenger.Instance.Subscribe(typeof(SavePersistablesMessage), this);
+            _subIdLoadPersistables = ObjectMessenger.Instance.Subscribe(typeof(LoadPersistablesMessage), this);
+
+            Load();
         }
 
         protected void Update()
@@ -72,25 +80,42 @@ namespace Resources.Ships.Player
             _inputVector.y = _inputY;
             if(Math.Abs(_inputVector.magnitude) > 0) { Move(_inputVector); }
             if (Input.GetButton("Fire1")) { CurrentWeapon?.Fire(); }
+            if (Input.GetKeyDown(KeyCode.F)) { CurrentItem?.Activate(); }
 
-            if (Input.GetKeyDown(KeyCode.U))
-            {
-                print(JsonUtility.ToJson(this, true));
-            }
+            if (Input.GetKeyDown(KeyCode.U)) { Save(); }
+            if (Input.GetKeyDown(KeyCode.L)) { Load(); }
         }
 
         protected void OnDestroy()
         {
-            if (_subIdWeaponMessage.HasValue)
-            {
-                ObjectMessenger.Instance.Unsubscribe(_subIdWeaponMessage.Value);
-            }
+            ObjectMessenger.Instance.Unsubscribe(ref _subIdWeaponMessage);
+            ObjectMessenger.Instance.Unsubscribe(ref _subIdItemMessage);
+            ObjectMessenger.Instance.Unsubscribe(ref _subIdSavePersistables);
+            ObjectMessenger.Instance.Unsubscribe(ref _subIdLoadPersistables);
         }
 
         public void Move(Vector2 vector)
         {
             var moveVector =  vector.normalized * MovementSpeed * Time.deltaTime;
             transform.Translate(moveVector.x, moveVector.y, 0, Space.Self);
+        }
+
+        public void ChangeWeapon(string prefabPath)
+        {
+            if(CurrentWeapon != null)
+            {
+                Destroy(CurrentWeapon.GetGameObject());
+                CurrentWeapon = null;
+            }
+
+            if (string.IsNullOrEmpty(prefabPath)) { return; }
+
+            var weapon = Instantiate(UnityEngine.Resources.Load<GameObject>(
+                    prefabPath), WeaponSlots.position, transform.rotation, transform)
+                .GetComponent<IWeapon>();
+
+            ChangeWeapon(weapon);
+            weapon.SetStatsObject(transform);
         }
 
         public void ChangeWeapon([NotNull] IWeapon weapon)
@@ -101,6 +126,24 @@ namespace Resources.Ships.Player
             }
 
             CurrentWeapon = weapon ?? throw new ArgumentNullException(nameof(weapon));
+        }
+
+        public void ChangeItem(string prefabPath)
+        {
+            if(CurrentItem != null)
+            {
+                Destroy(CurrentItem.GetGameObject());
+                CurrentItem = null;
+            }
+
+            if (string.IsNullOrEmpty(prefabPath)) { return; }
+
+            var item = Instantiate(UnityEngine.Resources.Load<GameObject>(
+                    prefabPath), ItemSlots.position, transform.rotation, transform)
+                .GetComponent<IItem>();
+
+            ChangeItem(item);
+            item.SetStatsObject(transform);
         }
 
         public void ChangeItem([NotNull] IItem item)
@@ -150,23 +193,35 @@ namespace Resources.Ships.Player
         {
             if(message is WeaponMessage weaponMsg)
             {
-                var weapon = Instantiate(UnityEngine.Resources.Load<GameObject>(
-                            weaponMsg.weapon.GetPrefabPath()), WeaponSlot.position, transform.rotation, transform)
-                    .GetComponent<IWeapon>();
-
-               ChangeWeapon(weapon);
-               weapon.SetStatsObject(transform);
+                ChangeWeapon(weaponMsg.Weapon.GetPrefabPath());
             }
 
             if(message is ItemMessage itemMsg)
             {
-                var item = Instantiate(UnityEngine.Resources.Load<GameObject>(
-                        itemMsg.Item.GetPrefabPath()), ItemSlot.position, transform.rotation, transform)
-                    .GetComponent<IItem>();
-
-                ChangeItem(item);
-                item.SetStatsObject(transform);
+                ChangeItem(itemMsg.Item.GetPrefabPath());
             }
+
+            if(message is SavePersistablesMessage)
+            {
+                Save();
+            }
+
+            if(message is LoadPersistablesMessage)
+            {
+                Load();
+            }
+        }
+
+        public void Save()
+        {
+            PersistenceOperations.SaveToFile(nameof(PlayerEntity), this);
+        }
+
+        public void Load()
+        {
+            JsonUtility.FromJsonOverwrite(PersistenceOperations.GetFileContent(nameof(PlayerEntity)), this);
+            ChangeWeapon(_weaponPrefabPath);
+            ChangeItem(_itemPrefabPath);
         }
     }
 }

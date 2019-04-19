@@ -1,5 +1,5 @@
 ﻿using Messages;
-using Resources.Items;
+using Resources.Items.Overcharge;
 using Resources.Weapons.Laser;
 using Resources.Weapons.Rocket;
 using UnityEngine;
@@ -10,9 +10,10 @@ namespace StaticObjects
     {
         public void ChangeWeaponLaser()
         {
+            var path = LaserWeapon.ResourcePrefabPath;
             ObjectMessenger.Instance.Publish(new WeaponMessage
             {
-                weapon = new LaserWeapon()
+                Weapon = new LaserWeapon()
             });
         }
 
@@ -20,7 +21,7 @@ namespace StaticObjects
         {
             ObjectMessenger.Instance.Publish(new WeaponMessage
             {
-                weapon = new RocketWeapon()
+                Weapon = new RocketWeapon()
             });
         }
 
@@ -28,8 +29,18 @@ namespace StaticObjects
         {
             ObjectMessenger.Instance.Publish(new ItemMessage
             {
-                Item =  new OverchargeItem()
+                Item = new OverchargeItem()
             });
+        }
+
+        public void LoadPersistables()
+        {
+            ObjectMessenger.Instance.Publish(new LoadPersistablesMessage());
+        }
+
+        public void SavePersistables()
+        {
+            ObjectMessenger.Instance.Publish(new SavePersistablesMessage());
         }
     }
 }

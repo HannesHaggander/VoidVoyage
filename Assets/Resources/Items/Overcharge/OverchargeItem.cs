@@ -1,11 +1,9 @@
-﻿using Resources.Ships;
-using Resources.Ships.Player;
-using StaticObjects;
-using System;
+﻿using System;
 using System.Collections;
+using Resources.Ships;
 using UnityEngine;
 
-namespace Resources.Items
+namespace Resources.Items.Overcharge
 {
     public class OverchargeItem : MonoBehaviour, IItem
     {
@@ -13,14 +11,6 @@ namespace Resources.Items
         private float _duration = 5;
         private Coroutine _cooldownRoutine;
         public Transform StatsTransform { get; private set; }
-
-        protected void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.F) && _cooldownRoutine == null)
-            {
-                Activate();
-            }
-        }
 
         private IEnumerator StartCoolDown()
         {
@@ -30,10 +20,12 @@ namespace Resources.Items
 
         public void Activate()
         {
+            if(_cooldownRoutine != null) { return; }
+
             print($"{name}{DateTime.Now:T}: Activating item");
             _cooldownRoutine = StartCoroutine(StartCoolDown());
             
-            _damageTrackId = GetStats().AddDamageMultiplier(10);
+            _damageTrackId = GetStats().AddDamageMultiplier(1);
             _fireRateTrackId = GetStats().AddFireRateMultiplier(-1);
         }
 

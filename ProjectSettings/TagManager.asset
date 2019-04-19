@@ -6,6 +6,8 @@ TagManager:
   tags:
   - EntityRoot
   - Enemy
+  - WeaponSlot
+  - ItemSlot
   layers:
   - Default
   - TransparentFX

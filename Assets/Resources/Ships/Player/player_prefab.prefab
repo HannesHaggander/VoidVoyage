@@ -108,10 +108,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dce00734271abab4785f64d68a0d9164, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MovementSpeed: 3
   Health: 100
   MaxHealth: 100
   WeaponPrefabPath: 
+  ItemPrefabPath: 
   WeaponSlot: {fileID: 2340197476813664960}
   ItemSlot: {fileID: 1709278665}
 --- !u!50 &8351275526769592309

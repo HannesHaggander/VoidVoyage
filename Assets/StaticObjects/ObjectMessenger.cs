@@ -53,6 +53,13 @@ namespace StaticObjects
             }
         }
 
+        public void Unsubscribe(ref Guid? id)
+        {
+            if (!id.HasValue) { return; }
+            Unsubscribe(id.Value);
+            id = null;
+        }
+
         public void Publish(object message)
         {
             if (!_subCache.TryGetValue(message.GetType(), out var subs)) { return; }

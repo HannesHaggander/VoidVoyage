@@ -12,6 +12,7 @@ namespace Resources.Weapons.Laser
         public int BaseDamage = 1;
         public GameObject Projectile;
         public Transform StatsObject { get; private set; }
+        public const string ResourcePrefabPath = "Weapons/Laser/laser_weapon_prefab";
 
         private Camera _mainCamera;
         private DateTime _lastFire;
@@ -28,7 +29,7 @@ namespace Resources.Weapons.Laser
             _lastFire = DateTime.Now;
             Instantiate(Projectile, transform.position, transform.rotation)
                 .GetComponent<LaserProjectile>()
-                .SetDamage(5)
+                .SetDamage(GetDamage())
                 .SetSource(transform.parent);
         }
 
@@ -52,10 +53,7 @@ namespace Resources.Weapons.Laser
             return Mathf.Clamp(BaseFireRate + GetStats().GetFireRateMultiplier(), 0.1f, float.PositiveInfinity);
         }
 
-        public string GetPrefabPath()
-        {
-            return "Weapons/Laser/laser_weapon_prefab";
-        }
+        public string GetPrefabPath() => ResourcePrefabPath;
 
         public GameObject GetGameObject() => gameObject;
 
