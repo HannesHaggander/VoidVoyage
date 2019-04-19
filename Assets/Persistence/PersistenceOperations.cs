@@ -25,7 +25,13 @@ namespace Persistence
         private static MetaDataFile GetMetaData()
         {
             var filePath = Path.Combine(Application.persistentDataPath, nameof(MetaDataFile));
-            return File.Exists(filePath) ? JsonUtility.FromJson<MetaDataFile>(filePath) : new MetaDataFile();
+            if (!File.Exists(filePath))
+            {
+                File.Create(filePath).Close();
+                File.WriteAllText(filePath, JsonUtility.ToJson(new MetaDataFile()));
+            }
+
+            return JsonUtility.FromJson<MetaDataFile>(File.ReadAllText(filePath));
         }
     }
 }

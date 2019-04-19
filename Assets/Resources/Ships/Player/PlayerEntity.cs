@@ -42,18 +42,19 @@ namespace Resources.Ships.Player
             get;
             private set;
         }
+        [NonSerialized]
+        public Transform WeaponSlots, ItemSlots;
 
         private string _inputHorizontal = "Horizontal", _inputVertical = "Vertical";
         private float _inputX, _inputY;
         private Vector2 _inputVector;
         private IWeapon _currentWeaponCache;
         private IItem _currentItemCache;
-        [SerializeField][HideInInspector]
+        [SerializeField]
+        [HideInInspector]
         private string _weaponPrefabPath = "", _itemPrefabPath = "";
         private Guid? _subIdWeaponMessage, _subIdItemMessage, _subIdSavePersistables, _subIdLoadPersistables;
-        [NonSerialized]
-        public Transform WeaponSlots, ItemSlots;
-        
+
         protected void Awake()
         {
             ItemCache.Instance.SetPlayerEntity(this);
@@ -64,12 +65,11 @@ namespace Resources.Ships.Player
 
         protected void Start()
         {
+            Load();
             _subIdWeaponMessage = ObjectMessenger.Instance.Subscribe(typeof(WeaponMessage), this);
             _subIdItemMessage = ObjectMessenger.Instance.Subscribe(typeof(ItemMessage), this);
             _subIdSavePersistables = ObjectMessenger.Instance.Subscribe(typeof(SavePersistablesMessage), this);
             _subIdLoadPersistables = ObjectMessenger.Instance.Subscribe(typeof(LoadPersistablesMessage), this);
-
-            Load();
         }
 
         protected void Update()
@@ -78,7 +78,7 @@ namespace Resources.Ships.Player
             _inputY = Input.GetAxisRaw(_inputVertical);
             _inputVector.x = _inputX;
             _inputVector.y = _inputY;
-            if(Math.Abs(_inputVector.magnitude) > 0) { Move(_inputVector); }
+            if (Math.Abs(_inputVector.magnitude) > 0) { Move(_inputVector); }
             if (Input.GetButton("Fire1")) { CurrentWeapon?.Fire(); }
             if (Input.GetKeyDown(KeyCode.F)) { CurrentItem?.Activate(); }
 
@@ -96,13 +96,13 @@ namespace Resources.Ships.Player
 
         public void Move(Vector2 vector)
         {
-            var moveVector =  vector.normalized * MovementSpeed * Time.deltaTime;
+            var moveVector = vector.normalized * MovementSpeed * Time.deltaTime;
             transform.Translate(moveVector.x, moveVector.y, 0, Space.Self);
         }
 
         public void ChangeWeapon(string prefabPath)
         {
-            if(CurrentWeapon != null)
+            if (CurrentWeapon != null)
             {
                 Destroy(CurrentWeapon.GetGameObject());
                 CurrentWeapon = null;
@@ -120,7 +120,7 @@ namespace Resources.Ships.Player
 
         public void ChangeWeapon([NotNull] IWeapon weapon)
         {
-            if(CurrentWeapon != null)
+            if (CurrentWeapon != null)
             {
                 Destroy(CurrentWeapon.GetGameObject());
             }
@@ -130,7 +130,7 @@ namespace Resources.Ships.Player
 
         public void ChangeItem(string prefabPath)
         {
-            if(CurrentItem != null)
+            if (CurrentItem != null)
             {
                 Destroy(CurrentItem.GetGameObject());
                 CurrentItem = null;
@@ -148,7 +148,7 @@ namespace Resources.Ships.Player
 
         public void ChangeItem([NotNull] IItem item)
         {
-            if(CurrentItem != null)
+            if (CurrentItem != null)
             {
                 Destroy(CurrentItem.GetGameObject());
             }
@@ -158,21 +158,21 @@ namespace Resources.Ships.Player
 
         public void TakeDamage(int amount)
         {
-            if(amount < 0) { return; }
+            if (amount < 0) { return; }
 
             Health -= amount;
         }
 
         public void DealDamage([NotNull] IEntity target)
         {
-            if(target == null) { throw new ArgumentNullException(nameof(target)); }
-            if(CurrentWeapon == null) { return; }
+            if (target == null) { throw new ArgumentNullException(nameof(target)); }
+            if (CurrentWeapon == null) { return; }
             target.TakeDamage(CurrentWeapon.GetDamage());
         }
 
         public void Heal(int amount)
         {
-            if(amount < 0) { return; }
+            if (amount < 0) { return; }
 
             Health = Mathf.Clamp(Health + amount, Health, MaxHealth + Stats.GetMaxHealthBonus());
         }
@@ -191,22 +191,22 @@ namespace Resources.Ships.Player
 
         public void ReceiveObject(object message)
         {
-            if(message is WeaponMessage weaponMsg)
+            if (message is WeaponMessage weaponMsg)
             {
                 ChangeWeapon(weaponMsg.Weapon.GetPrefabPath());
             }
 
-            if(message is ItemMessage itemMsg)
+            if (message is ItemMessage itemMsg)
             {
                 ChangeItem(itemMsg.Item.GetPrefabPath());
             }
 
-            if(message is SavePersistablesMessage)
+            if (message is SavePersistablesMessage)
             {
                 Save();
             }
 
-            if(message is LoadPersistablesMessage)
+            if (message is LoadPersistablesMessage)
             {
                 Load();
             }

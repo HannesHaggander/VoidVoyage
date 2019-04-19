@@ -8,6 +8,33 @@ namespace StaticObjects
 {
     public class InterfaceBinder : MonoBehaviour
     {
+        public Transform[] Buttons;
+        public bool StartVisible;
+
+        protected void Start()
+        {
+            foreach (var button in Buttons)
+            {
+                button.gameObject.SetActive(StartVisible);
+            }
+        }
+
+        protected void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                ToggleButtonActiveStatus();
+            }
+        }
+
+        private void ToggleButtonActiveStatus()
+        {
+            foreach (var button in Buttons)
+            {
+                button.gameObject.SetActive(!button.gameObject.activeSelf);
+            }
+        }
+
         public void ChangeWeaponLaser()
         {
             var path = LaserWeapon.ResourcePrefabPath;

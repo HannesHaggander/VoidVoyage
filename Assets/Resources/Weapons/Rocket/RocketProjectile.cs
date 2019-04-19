@@ -1,7 +1,6 @@
-﻿using System;
-using CodeExtensions;
-using JetBrains.Annotations;
+﻿using CodeExtensions;
 using Resources.Ships;
+using System;
 using UnityEngine;
 
 namespace Resources.Weapons.Rocket
@@ -20,7 +19,11 @@ namespace Resources.Weapons.Rocket
 
         private void MoveTowardsTarget()
         {
-            if (!Target) { return; }
+            if (!Target)
+            {
+                Destroy(gameObject);
+                return;
+            }
 
             transform.position = Vector3.Lerp(transform.position, Target.position, _speed * Time.deltaTime);
         }

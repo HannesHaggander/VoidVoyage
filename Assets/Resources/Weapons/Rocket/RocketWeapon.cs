@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Resources.Ships;
+using Resources.Ships.Player;
 using UnityEngine;
 
 namespace Resources.Weapons.Rocket
@@ -22,7 +24,7 @@ namespace Resources.Weapons.Rocket
             Instantiate(Projectile, transform.position, transform.rotation)
                 .GetComponent<RocketProjectile>()
                 .SetTarget(target.transform)
-                .SetDamage(3)
+                .SetDamage(GetDamage())
                 .SetSource(transform.parent);
         }
 
@@ -38,12 +40,12 @@ namespace Resources.Weapons.Rocket
 
         public int GetDamage()
         {
-            return GetBaseDamage();
+            return Mathf.Clamp(GetBaseDamage() + GetStats().GetDamageMultiplier(), 1, int.MaxValue);
         }
 
         public float GetFireRate()
         {
-            return GetBaseFireRate();
+            return Mathf.Clamp(GetBaseFireRate() + GetStats().GetFireRateMultiplier(), 0.1f, float.MaxValue);
         }
 
         public GameObject GetClosestTarget()
@@ -68,5 +70,7 @@ namespace Resources.Weapons.Rocket
         {
             _statsObject = statsObject;
         }
+
+        private IShipStats GetStats() => _statsObject.GetComponent<IShipStats>();
     }
 }
