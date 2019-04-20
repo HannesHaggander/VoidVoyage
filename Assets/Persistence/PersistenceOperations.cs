@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using UnityEngine;
+using UnityEngine.Profiling.Memory.Experimental;
 
 namespace Persistence
 {
@@ -22,9 +23,14 @@ namespace Persistence
             return File.Exists(path) ? File.ReadAllText(path) : null;
         }
 
-        private static MetaDataFile GetMetaData()
+        public static MetaDataFile GetMetaData()
         {
-            var filePath = Path.Combine(Application.persistentDataPath, nameof(MetaDataFile));
+            return GetMetaData(out _);
+        }
+
+        public static MetaDataFile GetMetaData(out string filePath)
+        {
+            filePath = Path.Combine(Application.persistentDataPath, nameof(MetaDataFile));
             if (!File.Exists(filePath))
             {
                 File.Create(filePath).Close();
@@ -32,6 +38,13 @@ namespace Persistence
             }
 
             return JsonUtility.FromJson<MetaDataFile>(File.ReadAllText(filePath));
+        }
+
+        public static void CreateNewSaveDirectory(string safeFileName)
+        {
+            var dirPath = Path.Combine(Application.persistentDataPath, safeFileName);
+            if (Directory.Exists(dirPath)) { return; }
+            Directory.CreateDirectory(dirPath);
         }
     }
 }
